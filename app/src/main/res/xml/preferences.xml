@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <EditTextPreference
+        android:key="host"
+        android:title="NNTP Host"
+        app:useSimpleSummaryProvider="true"
+        android:defaultValue="10.0.2.2" />
+
+    <EditTextPreference
+        android:key="port"
+        android:title="NNTP Port"
+        app:useSimpleSummaryProvider="true"
+        android:defaultValue="119"
+        android:inputType="number" />
+
+    <EditTextPreference
+        android:key="username"
+        android:title="Username (optional)"
+        app:useSimpleSummaryProvider="true" />
+
+    <EditTextPreference
+        android:key="password"
+        android:title="Password (optional)"
+        app:useSimpleSummaryProvider="true"
+        android:inputType="textPassword" />
+
+    <EditTextPreference
+        android:key="group"
+        android:title="Current Group"
+        app:useSimpleSummaryProvider="true"
+        android:defaultValue="@string/default_group" />
+</PreferenceScreen>

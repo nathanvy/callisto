@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Callisto</string>
+    <string name="menu_groups">Subscribed groups</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_settings">Settings</string>
+    <string name="drawer_open">Open navigation</string>
+    <string name="drawer_close">Close navigation</string>
+    <string name="default_group">titan.general</string>
+    <string name="compose_post">Compose post</string>
+    <string name="label_newsgroups">Newsgroups</string>
+    <string name="label_subject">Subject</string>
+    <string name="label_body">Body</string>
+    <string name="action_send">Send</string>
+    <string name="menu_subscriptions">Subscriptions</string>
+    <string name="title_manage_subs">Manage subscriptions</string>
+    <string name="hint_new_group">e.g. titan.general</string>
+    <string name="action_add">Add</string>
+    <string name="action_subscribe">Subscribe</string>
+    <string name="action_unsubscribe">Unsubscribe</string>
+    <string name="msg_enter_group">Enter a newsgroup name</string>
+    <string name="msg_group_exists">You’re already subscribed</string>
+    <string name="msg_group_added">Subscribed</string>
+    <string name="msg_group_removed">Unsubscribed</string>
+    <string name="msg_no_subs">No groups returned by server.</string>
+    <string name="action_reply">Reply</string>
+    <string name="loading">Loading…</string>
+
+</resources>
