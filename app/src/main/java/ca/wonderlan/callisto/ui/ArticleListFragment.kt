@@ -17,6 +17,8 @@ import ca.wonderlan.callisto.data.NNTPClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 
 class ArticleListFragment : Fragment() {
 
@@ -62,25 +64,84 @@ class ArticleListFragment : Fragment() {
         val port = prefs.getString("port", "119")!!.toIntOrNull() ?: 119
         val group = prefs.getString("group", getString(R.string.default_group))!!
 
+        // Step 1: query GROUP to get counts without downloading any articles
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val items = withContext(Dispatchers.IO) {
-                    NNTPClient(host, port).use { client ->
+                val useTls = prefs.getBoolean("use_tls", false)
+                val username = prefs.getString("username", null)
+                val password = prefs.getString("password", null)
+
+                val stat = withContext(Dispatchers.IO) {
+                    ca.wonderlan.callisto.data.NNTPClient(host, port, useTls).use { client ->
+                        if (!username.isNullOrBlank()) client.auth(username, password ?: "")
                         client.selectGroup(group)
-                        client.fetchRecentArticles(100)
                     }
                 }
-                if (items.isEmpty()) {
-                    Toast.makeText(requireContext(), "No articles yet in $group", Toast.LENGTH_SHORT).show()
+
+                val lastSeenKey = "last_seen_high:$group"
+                val lastSeenHigh = prefs.getLong(lastSeenKey, 0L)
+                val newCount = if (stat.high > lastSeenHigh) (stat.high - lastSeenHigh).toInt() else 0
+
+                val threshold = prefs.getString("prompt_threshold", "200")!!.toIntOrNull() ?: 200
+
+                fun actuallyFetch(limit: Int) {
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        try {
+                            val items = withContext(Dispatchers.IO) {
+                                ca.wonderlan.callisto.data.NNTPClient(host, port, useTls).use { client ->
+                                    if (!username.isNullOrBlank()) client.auth(username, password ?: "")
+                                    client.selectGroup(group)
+                                    val toFetch = if (limit > 0) limit else 100
+                                    client.fetchRecentArticles(toFetch)
+                                }
+                            }
+                            adapter.submit(items)
+
+                            // Update high-water mark if we fetched any new messages
+                            if (stat.high > 0L) {
+                                prefs.edit().putLong(lastSeenKey, stat.high).apply()
+                            }
+
+                            if (items.isEmpty()) {
+                                Toast.makeText(requireContext(), "No articles yet in $group", Toast.LENGTH_SHORT).show()
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(requireContext(), "Failed: ${e.message}", Toast.LENGTH_LONG).show()
+                        } finally {
+                            swipe.isRefreshing = false
+                        }
+                    }
                 }
-                adapter.submit(items)
+
+                // Step 2: decide whether to prompt
+                if (newCount > threshold) {
+                    swipe.isRefreshing = false // stop spinner while we prompt
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(getString(R.string.dialog_large_download_title))
+                        .setMessage(getString(R.string.dialog_large_download_msg, newCount, group))
+                        .setPositiveButton(getString(R.string.dialog_download_all, newCount)) { _, _ ->
+                            swipe.isRefreshing = true
+                            actuallyFetch(newCount)
+                        }
+                        .setNeutralButton(getString(R.string.dialog_download_cap, threshold)) { _, _ ->
+                            swipe.isRefreshing = true
+                            actuallyFetch(threshold)
+                        }
+                        .setNegativeButton(getString(R.string.dialog_cancel)) { _, _ ->
+                            // Do nothing; user cancelled
+                        }
+                        .show()
+                } else {
+                    // Below threshold: proceed normally
+                    actuallyFetch(if (newCount > 0) newCount else 100)
+                }
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Failed: ${e.message}", Toast.LENGTH_LONG).show()
-            } finally {
                 swipe.isRefreshing = false
             }
         }
     }
+
 
     companion object {
         fun newInstance() = ArticleListFragment()

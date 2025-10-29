@@ -24,5 +24,11 @@
     <string name="msg_no_subs">No groups returned by server.</string>
     <string name="action_reply">Reply</string>
     <string name="loading">Loading…</string>
-
+    <string name="pref_prompt_threshold_label">Ask before downloading more than %1$d messages</string>
+    <string name="dialog_large_download_title">Large download</string>
+    <string name="dialog_large_download_msg">This refresh would download %1$d messages for %2$s. Proceed?</string>
+    <string name="dialog_download_all">Download all (%1$d)</string>
+    <string name="dialog_download_cap">Download %1$d</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="groups_count">Showing %1$d of %2$d</string>
 </resources>

@@ -1,5 +1,6 @@
 package ca.wonderlan.callisto.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,6 +18,8 @@ import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
 import androidx.preference.PreferenceManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 
 class ComposePostActivity : AppCompatActivity() {
 
@@ -89,10 +92,27 @@ class ComposePostActivity : AppCompatActivity() {
         // Build minimal headers
         val msgId = "<${UUID.randomUUID()}@callisto>"
         val dateRfc2822 = rfc2822(Date())
-        val fromHeader = when {
-            !username.isNullOrBlank() -> username
-            else -> "callisto@device" // fallback
+        val displayName = prefs.getString("display_name", "")!!.trim()
+        val email = prefs.getString("email", "")!!.trim()
+
+        if (displayName.isEmpty() || email.isEmpty()) {
+            // Block posting and send the user to Settings
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Missing identity")
+                .setMessage("Please set your Display name and Email in Settings before posting.")
+                .setPositiveButton("Open Settings") { _, _ ->
+                    val intent = Intent(this, ca.wonderlan.callisto.MainActivity::class.java)
+                        .putExtra("open_settings", true)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    startActivity(intent)
+                    finish()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+            return
         }
+
+        val fromHeader = "$displayName <$email>"
 
         val headers = linkedMapOf(
             "From" to fromHeader,
@@ -110,11 +130,12 @@ class ComposePostActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
+            val useTls = prefs.getBoolean("use_tls", false)
+
             val ok = withContext(Dispatchers.IO) {
                 try {
-                    NNTPClient(host, port).use { client ->
-                        // Optional AUTH (v1 omitted). If you add AUTHINFO, do it here.
-                        // Post text-only body; NNTPClient handles dot-stuffing.
+                    NNTPClient(host, port, useTls).use { client ->
+                        if (!username.isNullOrBlank()) client.auth(username, password ?: "")
                         client.post(headers, bodyText.split("\n"))
                     }
                 } catch (e: Exception) {

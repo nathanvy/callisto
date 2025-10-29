@@ -87,6 +87,14 @@ class MainActivity : AppCompatActivity(), DrawerMenuHost {
                 .replace(R.id.fragment_container, ArticleListFragment.newInstance())
                 .commit()
         }
+
+        if (intent?.getBooleanExtra("open_settings", false) == true) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, ca.wonderlan.callisto.ui.SettingsFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+        intent.removeExtra("open_settings")
     }
 
     override fun onResume() {

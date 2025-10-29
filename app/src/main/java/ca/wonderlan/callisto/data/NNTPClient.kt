@@ -1,5 +1,6 @@
 package ca.wonderlan.callisto.data
 
+import java.io.*
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.Closeable
@@ -7,6 +8,8 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.Socket
 import java.nio.charset.Charset
+import javax.net.ssl.SSLSocket
+import javax.net.ssl.SSLSocketFactory
 
 // Top-level so fragments can import it.
 data class GroupInfo(
@@ -22,17 +25,26 @@ data class GroupInfo(
  *
  * NOTE: No TLS for v1. Put a TLS proxy in front if needed, or extend to use SSLSocket.
  */
-class NNTPClient(host: String, port: Int) : Closeable {
+class NNTPClient(host: String, port: Int, useTls: Boolean = false) : Closeable {
 
-    private val socket = Socket(host, port)
-    private val reader = BufferedReader(
-        InputStreamReader(socket.getInputStream(), Charset.forName("US-ASCII"))
-    )
-    private val writer = BufferedWriter(
-        OutputStreamWriter(socket.getOutputStream(), Charset.forName("US-ASCII"))
-    )
+    private val socket: Socket
+    private val reader: BufferedReader
+    private val writer: BufferedWriter
 
     init {
+        socket = if (useTls) {
+            val factory = SSLSocketFactory.getDefault() as SSLSocketFactory
+            val s = factory.createSocket(host, port) as SSLSocket
+            // (Optional) enable only modern TLS suites; defaults are usually fine
+            s.startHandshake()
+            s
+        } else {
+            Socket(host, port)
+        }
+
+        reader = BufferedReader(InputStreamReader(socket.getInputStream(), Charset.forName("US-ASCII")))
+        writer = BufferedWriter(OutputStreamWriter(socket.getOutputStream(), Charset.forName("US-ASCII")))
+
         val banner = reader.readLine() ?: throw RuntimeException("No server banner")
         if (!banner.startsWith("200") && !banner.startsWith("201")) {
             throw RuntimeException("Bad banner: $banner")

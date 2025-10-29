@@ -11,20 +11,44 @@
 
     <EditTextPreference
         android:key="port"
-        android:title="NNTP Port"
+        android:title="Port"
         app:useSimpleSummaryProvider="true"
         android:defaultValue="119"
         android:inputType="number" />
 
+    <SwitchPreferenceCompat
+        android:key="use_tls"
+        android:title="Use TLS"
+        android:defaultValue="false" />
+
+    <EditTextPreference
+        android:key="display_name"
+        android:title="Display name"
+        app:useSimpleSummaryProvider="true" />
+
+    <EditTextPreference
+        android:key="email"
+        android:title="Email"
+        app:useSimpleSummaryProvider="true"
+        android:inputType="textEmailAddress" />
+
     <EditTextPreference
         android:key="username"
-        android:title="Username (optional)"
+        android:title="Username"
         app:useSimpleSummaryProvider="true" />
 
     <EditTextPreference
         android:key="password"
-        android:title="Password (optional)"
+        android:title="Password"
         app:useSimpleSummaryProvider="true"
         android:inputType="textPassword" />
+
+    <EditTextPreference
+        android:key="prompt_threshold"
+        android:title="Ask before downloading more than"
+        android:dialogTitle="Maximum messages before asking"
+        app:useSimpleSummaryProvider="true"
+        android:defaultValue="200"
+        android:inputType="number" />
 
 </PreferenceScreen>
