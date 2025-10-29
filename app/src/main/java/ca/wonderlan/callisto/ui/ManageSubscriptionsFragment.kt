@@ -74,18 +74,39 @@ class ManageSubscriptionsFragment : Fragment() {
     private fun onToggleSubscribe(group: String, checked: Boolean) {
         val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
         val set = prefs.getStringSet("subs", emptySet())!!.toMutableSet()
-        if (checked) set.add(group) else set.remove(group)
+
+        val beforeHadAny = set.isNotEmpty()
+        val wasCurrent = prefs.getString("group", null) == group
+
+        if (checked) {
+            set.add(group)
+        } else {
+            set.remove(group)
+        }
         prefs.edit().putStringSet("subs", set).apply()
 
-        // If we just subscribed and there's no current group, set it
-        val current = prefs.getString("group", null)
-        if (current.isNullOrBlank() && checked) {
+        // If we just subscribed and no current group exists, set it.
+        if (checked && prefs.getString("group", null).isNullOrBlank()) {
             prefs.edit().putString("group", group).apply()
         }
 
+        // If we unsubscribed the current group, pick a sane replacement.
+        if (!checked && wasCurrent) {
+            val replacement = set.firstOrNull()
+            if (replacement != null) {
+                prefs.edit().putString("group", replacement).apply()
+                Toast.makeText(requireContext(), "Now viewing $replacement", Toast.LENGTH_SHORT).show()
+            } else {
+                // No subs left; clear current group so callers can handle empty state.
+                prefs.edit().remove("group").apply()
+                Toast.makeText(requireContext(), "No subscriptions selected", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         // Ask the activity to rebuild the drawer
-        (activity as? DrawerMenuHost)?.rebuildDrawerMenu()
+        (activity as? ca.wonderlan.callisto.DrawerMenuHost)?.rebuildDrawerMenu()
     }
+
 
     companion object { fun newInstance() = ManageSubscriptionsFragment() }
 }

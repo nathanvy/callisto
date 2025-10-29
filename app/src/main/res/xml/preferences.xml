@@ -27,9 +27,4 @@
         app:useSimpleSummaryProvider="true"
         android:inputType="textPassword" />
 
-    <EditTextPreference
-        android:key="group"
-        android:title="Current Group"
-        app:useSimpleSummaryProvider="true"
-        android:defaultValue="@string/default_group" />
 </PreferenceScreen>

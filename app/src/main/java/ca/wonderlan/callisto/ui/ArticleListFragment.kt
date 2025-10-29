@@ -70,6 +70,9 @@ class ArticleListFragment : Fragment() {
                         client.fetchRecentArticles(100)
                     }
                 }
+                if (items.isEmpty()) {
+                    Toast.makeText(requireContext(), "No articles yet in $group", Toast.LENGTH_SHORT).show()
+                }
                 adapter.submit(items)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Failed: ${e.message}", Toast.LENGTH_LONG).show()

@@ -45,9 +45,6 @@ class ComposePostActivity : AppCompatActivity() {
         // Prefill subject and (optional) references from intent
         intent.getStringExtra(EXTRA_SUBJECT)?.let { inputSubject.setText(it) }
 
-        // Store references in a field for use on send
-        val prefilledReferences = intent.getStringExtra(EXTRA_REFERENCES)
-
         // Prefill group from intent or preferences
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         val prefillGroup = intent.getStringExtra(EXTRA_GROUP)
@@ -105,11 +102,11 @@ class ComposePostActivity : AppCompatActivity() {
             "Message-ID" to msgId
         )
 
-        // If replying, add References header
-        intent.getStringExtra(EXTRA_REFERENCES)?.let { ref ->
-            if (!ref.isNullOrBlank()) {
-                headers["References"] = ref
-            }
+        // If replying, add References and In-Reply-To for better threading
+        intent.getStringExtra(EXTRA_REFERENCES)?.let { raw ->
+            val ref = raw.trim().let { s -> if (s.startsWith("<") && s.endsWith(">")) s else "<$s>" }
+            headers["References"] = ref
+            headers["In-Reply-To"] = ref
         }
 
         lifecycleScope.launch {
